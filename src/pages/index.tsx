@@ -7,8 +7,9 @@ import {
   Stack,
   chakra,
 } from "@chakra-ui/react";
-import type { NextPage } from "next";
+import type { GetServerSideProps, NextPage } from "next";
 import Head from "next/head";
+import { parseCookies } from "nookies";
 import { FormEvent, useRef, useState } from "react";
 import { useAuth } from "../contexts/AuthContext";
 
@@ -92,3 +93,29 @@ const Home: NextPage = () => {
 };
 
 export default Home;
+
+// Server Side
+// É executado antes de aparecer a interface
+export const getServerSideProps: GetServerSideProps = async (context) => {
+  // Como está no server-side, é necessário passar o context
+  const { "nextauth.token": token } = parseCookies(context);
+
+  // Se existir o token nos cookies, significa que o user está logado,
+  // Mesmo que o token esteja inválido, pode se considerar que o user está logado, pois o client vai tentar
+  // fazer refresh do token, e caso o refresh seja inválido, o user é deslogado (cookies sao apagados)
+  // Redireciona para o dashboard com o permanent false para o HTTP Code ser 302
+  // Como isso é executado antes de renderizar a página, nenhum conteúdo visual é mostrado
+  // Caso os cookies fossem HTTP only eles só seriam acessíveis pelo server
+  if (token)
+    return {
+      redirect: {
+        destination: "/dashboard",
+        permanent: false,
+      },
+    };
+
+  // Retorno padrao do getServerSideProps
+  return {
+    props: {},
+  };
+};
