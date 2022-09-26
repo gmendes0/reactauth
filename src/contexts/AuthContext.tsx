@@ -67,6 +67,8 @@ export function AuthProvider(props: AuthProviderProps): JSX.Element {
         const { email, permissions, roles } = response.data;
 
         setUser({ email, permissions, roles });
+
+        console.log("provider: ", response);
       });
     }
   }, []);
