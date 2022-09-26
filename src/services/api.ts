@@ -1,5 +1,6 @@
-import axios, { Axios, AxiosError } from "axios";
+import axios, { Axios, AxiosError, AxiosRequestConfig } from "axios";
 import { parseCookies, setCookie } from "nookies";
+import { signOut } from "../contexts/AuthContext";
 
 type TErrorResponse =
   | undefined
@@ -28,15 +29,16 @@ let failedRequestsQueue: TFailedRequest[] = [];
 
 export const api = axios.create({
   baseURL: process.env.NEXT_PUBLIC_API_URL,
-
-  // Headers que serao enviados em todas as requests
-  headers: {
-    // O problema é que esse arquivo só é carregado uma vez após o F5, ou seja, se o usuário tiver acessando pela primeira vez
-    // provavelmente o cookie nextauth.token nao existe ainda, e o valor setado no Authorization vai ser undefined
-    // para resolver isso, é necessário atualizar esse header após o user fazer o login
-    Authorization: `Bearer ${token}`,
-  },
 });
+
+// Header que sera enviado em todas as requests
+// O problema é que esse arquivo só é carregado uma vez após o F5, ou seja, se o usuário tiver acessando pela primeira vez
+// provavelmente o cookie nextauth.token nao existe ainda, e o valor setado no Authorization vai ser undefined
+// para resolver isso, é necessário atualizar esse header após o user fazer o login
+api.defaults.headers.common = {
+  ...api.defaults.headers.common,
+  Authorization: `Bearer ${token}`,
+};
 
 api.interceptors.response.use(
   (response) => response,
@@ -81,9 +83,10 @@ api.interceptors.response.use(
                   }
                 );
 
-                api.defaults.headers.common[
-                  "Authorization"
-                ] = `Bearer ${response.data.token}`;
+                api.defaults.headers.common = {
+                  ...api.defaults.headers.common,
+                  Authorization: `Bearer ${response.data.token}`,
+                };
 
                 // Executa todas as requests de novo com o token atualizado
                 failedRequestsQueue.forEach((request) => {
@@ -98,6 +101,7 @@ api.interceptors.response.use(
                 isRefreshing = false;
               })
               .catch((err) => {
+                // Caso de erro para fazer refresh, o erro é repassado
                 // Falha todas as requests
                 failedRequestsQueue.forEach((request) => {
                   request.onFailure(err);
@@ -138,11 +142,17 @@ api.interceptors.response.use(
           });
           break;
         default:
-          // desloga
+          signOut();
           break;
       }
     }
 
-    throw error;
+    return Promise.reject(error);
   }
 );
+
+api.interceptors.request.use((config: AxiosRequestConfig) => {
+  console.log("JWT", config.headers["Authorization"]);
+
+  return config;
+});

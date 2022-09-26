@@ -1,5 +1,5 @@
 import Router from "next/router";
-import { setCookie, parseCookies } from "nookies";
+import { setCookie, parseCookies, destroyCookie } from "nookies";
 import {
   createContext,
   ReactNode,
@@ -58,24 +58,37 @@ export function AuthProvider(props: AuthProviderProps): JSX.Element {
   // Por mais que o JWT retorne algumas infos do user, como email, permissions e roles (nesse caso específico),
   // é interessante buscar as infos atualizadas do backend, pois as permissions e roles podem mudar.
   useEffect(() => {
+    console.log("useEffect | provider");
     const { "nextauth.token": token } = parseCookies();
 
     if (token) {
       // É possível passar o header authorization aqui, mas é possível tbm definir que ele será passado em todas as
       // requisiçoes, adicionando ele no axios.create
-      api.get<TMeResponse>("/me").then((response) => {
-        const { email, permissions, roles } = response.data;
+      api
+        .get<TMeResponse>("/me")
+        .then((response) => {
+          const { email, permissions, roles } = response.data;
 
-        setUser({ email, permissions, roles });
+          setUser({ email, permissions, roles });
 
-        console.log("provider: ", response);
-      });
+          console.log("provider: ", response);
+        })
+        .catch((error) => {
+          console.log("error.provider", error);
+
+          signOut();
+        })
+        .finally(() => {
+          console.log("useEffect Finalizado | provider");
+        });
     }
   }, []);
 
   const isAuthenticated = !!user;
 
   async function signIn({ email, password }: TSignInCredentials) {
+    console.log("Sign In | provider");
+
     try {
       const response = await api.post<TSessionData>("/sessions", {
         email,
@@ -111,12 +124,22 @@ export function AuthProvider(props: AuthProviderProps): JSX.Element {
       setUser({ email, permissions, roles });
 
       // Atualiza o header padrao Authorization que vai ser utilizado em todas as requisiçoes
-      api.defaults.headers.common["Authorization"] = `Bearer ${token}`;
+      api.defaults.headers.common = {
+        ...api.defaults.headers.common,
+        Authorization: `Bearer ${token}`,
+      };
+
+      console.log(
+        "Header Atualizado | provider: ",
+        api.defaults.headers.common["Authorization"]
+      );
 
       Router.push("/dashboard"); // funciona igual ao push do useRouter
     } catch (error) {
       console.log(error);
     }
+
+    console.log("Sign In Finalizado | provider");
   }
 
   return (
@@ -124,4 +147,11 @@ export function AuthProvider(props: AuthProviderProps): JSX.Element {
       {props.children}
     </AuthContext.Provider>
   );
+}
+
+export function signOut(): void {
+  destroyCookie(undefined, "nextauth.token");
+  destroyCookie(undefined, "nextauth.refreshToken");
+
+  Router.push("/");
 }
