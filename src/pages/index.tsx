@@ -38,7 +38,7 @@ const Home: NextPage = () => {
   return (
     <>
       <Head>
-        <title>Sign In</title>
+        <title>Sign In | Auth</title>
       </Head>
 
       <Flex w="100vw" h="100vh" bg="gray.50" align="center" justify="center">

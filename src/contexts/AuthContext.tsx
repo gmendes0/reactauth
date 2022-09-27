@@ -7,7 +7,7 @@ import {
   useEffect,
   useState,
 } from "react";
-import { api } from "../services/api";
+import { api } from "../services/apiClient";
 
 type TSignInCredentials = {
   email: string;
@@ -58,6 +58,7 @@ export function AuthProvider(props: AuthProviderProps): JSX.Element {
   // Por mais que o JWT retorne algumas infos do user, como email, permissions e roles (nesse caso específico),
   // é interessante buscar as infos atualizadas do backend, pois as permissions e roles podem mudar.
   useEffect(() => {
+    console.log("window: ", !!typeof window);
     console.log("useEffect | provider");
     const { "nextauth.token": token } = parseCookies();
 
