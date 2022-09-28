@@ -2,6 +2,7 @@ import axios, { AxiosError, AxiosInstance } from "axios";
 import { GetServerSidePropsContext } from "next";
 import { parseCookies, setCookie } from "nookies";
 import { signOut } from "../contexts/AuthContext";
+import { AuthTokenError } from "./errors/AuthTokenError";
 
 type TErrorResponse =
   | undefined
@@ -153,7 +154,14 @@ export function setupApiClient(
             });
             break;
           default:
-            if (typeof window !== "undefined") signOut();
+            if (typeof window !== "undefined") {
+              signOut();
+            } else {
+              // Caso esteja no server-side, ele vai retornar esse erro
+              // É interessante retornar uma classe de erro específica e nao só Error
+              // para poder saber o tipo de erro
+              return Promise.reject(new AuthTokenError());
+            }
             break;
         }
       }

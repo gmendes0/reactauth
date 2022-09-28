@@ -1,9 +1,11 @@
 import { GetServerSideProps, NextPage } from "next";
 import Head from "next/head";
+import { destroyCookie } from "nookies";
 import { useEffect } from "react";
 import { signOut, useAuth } from "../contexts/AuthContext";
 import { setupApiClient } from "../services/api";
 import { api } from "../services/apiClient";
+import { AuthTokenError } from "../services/errors/AuthTokenError";
 import { withSSRAuth } from "../utils/withSSRAuth";
 
 const Dashboard: NextPage = () => {
