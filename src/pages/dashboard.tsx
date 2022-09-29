@@ -1,15 +1,23 @@
+import { Box, Button, Container, Heading, Text } from "@chakra-ui/react";
 import { GetServerSideProps, NextPage } from "next";
 import Head from "next/head";
+import { useRouter } from "next/router";
 import { destroyCookie } from "nookies";
 import { useEffect } from "react";
 import { signOut, useAuth } from "../contexts/AuthContext";
+import { useCan } from "../hooks/useCan";
 import { setupApiClient } from "../services/api";
 import { api } from "../services/apiClient";
-import { AuthTokenError } from "../services/errors/AuthTokenError";
 import { withSSRAuth } from "../utils/withSSRAuth";
 
 const Dashboard: NextPage = () => {
+  const router = useRouter();
   const { user } = useAuth();
+
+  const userCanSeeMetrics = useCan({
+    permissions: ["metrics.list"],
+    roles: ["administrator", "editor"],
+  });
 
   useEffect(() => {
     console.log("useEffect | dashboard");
@@ -37,7 +45,36 @@ const Dashboard: NextPage = () => {
       <Head>
         <title>Dashboard | Auth</title>
       </Head>
-      <h1>Dashboard: {user?.email}</h1>
+
+      <Container maxW="container.xl" my={20}>
+        <Button
+          display="block"
+          ml="auto"
+          colorScheme="purple"
+          size="lg"
+          fontSize="md"
+          onClick={signOut}
+        >
+          Sign Out
+        </Button>
+        <Box w="100%" color="gray.600" mb={20}>
+          <Heading>Dashboard</Heading>
+          <Text>email: {user?.email}</Text>
+          {userCanSeeMetrics && <Text>I'm an administrator/editor</Text>}
+        </Box>
+
+        {userCanSeeMetrics && (
+          <Box w="100%" color="gray.600" mb={20}>
+            <Heading>Métrics</Heading>
+            <Text>
+              Lorem ipsum dolor sit amet, consectetur adipisicing elit. Expedita
+              tempore obcaecati sit reiciendis architecto quos dignissimos unde
+              ex tempora doloribus dolorem commodi, mollitia quam aperiam
+              numquam. Nobis ratione atque eveniet!
+            </Text>
+          </Box>
+        )}
+      </Container>
     </>
   );
 };
