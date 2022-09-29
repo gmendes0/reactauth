@@ -1,9 +1,8 @@
 import { Box, Button, Container, Heading, Text } from "@chakra-ui/react";
 import { GetServerSideProps, NextPage } from "next";
 import Head from "next/head";
-import { useRouter } from "next/router";
-import { destroyCookie } from "nookies";
 import { useEffect } from "react";
+import Can from "../components/Can";
 import { signOut, useAuth } from "../contexts/AuthContext";
 import { useCan } from "../hooks/useCan";
 import { setupApiClient } from "../services/api";
@@ -11,12 +10,11 @@ import { api } from "../services/apiClient";
 import { withSSRAuth } from "../utils/withSSRAuth";
 
 const Dashboard: NextPage = () => {
-  const router = useRouter();
   const { user } = useAuth();
 
   const userCanSeeMetrics = useCan({
-    permissions: ["metrics.list"],
-    roles: ["administrator", "editor"],
+    permissions: ["metrics.list"], // precisa ter todas essas permisoes
+    roles: ["administrator", "editor"], // Precisa ter uma dessas roles
   });
 
   useEffect(() => {
@@ -60,10 +58,13 @@ const Dashboard: NextPage = () => {
         <Box w="100%" color="gray.600" mb={20}>
           <Heading>Dashboard</Heading>
           <Text>email: {user?.email}</Text>
+
+          {/* O usuário só pode ver esse texto se tiver as permissoes/roles passadas no useCan */}
           {userCanSeeMetrics && <Text>I'm an administrator/editor</Text>}
         </Box>
 
-        {userCanSeeMetrics && (
+        {/* O usuário só pode ver esse texto se tiver as permissoes/roles passadas no Can */}
+        <Can permissions={["metrics.list"]} roles={["administrator", "editor"]}>
           <Box w="100%" color="gray.600" mb={20}>
             <Heading>Métrics</Heading>
             <Text>
@@ -73,7 +74,19 @@ const Dashboard: NextPage = () => {
               numquam. Nobis ratione atque eveniet!
             </Text>
           </Box>
-        )}
+        </Can>
+
+        {/* {userCanSeeMetrics && (
+          <Box w="100%" color="gray.600" mb={20}>
+            <Heading>Métrics</Heading>
+            <Text>
+              Lorem ipsum dolor sit amet, consectetur adipisicing elit. Expedita
+              tempore obcaecati sit reiciendis architecto quos dignissimos unde
+              ex tempora doloribus dolorem commodi, mollitia quam aperiam
+              numquam. Nobis ratione atque eveniet!
+            </Text>
+          </Box>
+        )} */}
       </Container>
     </>
   );
