@@ -1,6 +1,14 @@
-import { Box, Button, Container, Heading, Text } from "@chakra-ui/react";
+import {
+  Box,
+  Button,
+  Container,
+  Heading,
+  Link as ChakraLink,
+  Text,
+} from "@chakra-ui/react";
 import { GetServerSideProps, NextPage } from "next";
 import Head from "next/head";
+import Link from "next/link";
 import { useEffect } from "react";
 import Can from "../components/Can";
 import { signOut, useAuth } from "../contexts/AuthContext";
@@ -44,13 +52,11 @@ const Dashboard: NextPage = () => {
         <title>Dashboard | Auth</title>
       </Head>
 
-      <Container maxW="container.xl" my={20}>
+      <Container maxW="container.lg" my={20}>
         <Button
           display="block"
           ml="auto"
           colorScheme="purple"
-          size="lg"
-          fontSize="md"
           onClick={signOut}
         >
           Sign Out
@@ -73,6 +79,12 @@ const Dashboard: NextPage = () => {
               ex tempora doloribus dolorem commodi, mollitia quam aperiam
               numquam. Nobis ratione atque eveniet!
             </Text>
+
+            <Link href="/metrics" passHref>
+              <ChakraLink color="purple.600" mt={2} display="block">
+                See more...
+              </ChakraLink>
+            </Link>
           </Box>
         </Can>
 
