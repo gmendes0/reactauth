@@ -47,6 +47,7 @@ const Home: NextPage = () => {
           bg="white"
           boxShadow="lg"
           p={8}
+          mx={4}
           rounded="lg"
           w="md"
           onSubmit={handleSubmit}

@@ -17,6 +17,7 @@ type TSignInCredentials = {
 type TAuthContextData = {
   // pode ser que mais de um componente precise autenticar o user
   signIn: (credentials: TSignInCredentials) => Promise<void>;
+  signOut: () => void;
   isAuthenticated: boolean;
   user: TUser;
 };
@@ -50,8 +51,39 @@ export const AuthContext = createContext({} as TAuthContextData);
 
 export const useAuth = () => useContext(AuthContext);
 
+let authChannel: BroadcastChannel;
+
 export function AuthProvider(props: AuthProviderProps): JSX.Element {
   const [user, setUser] = useState<TUser>();
+
+  // Poderia fazer no de baixo. Mas é legal separar as responsabilidades
+  useEffect(() => {
+    authChannel = new BroadcastChannel("nextauth");
+
+    // Registra o listener de message
+    // Quando uma mensagem for enviada, a funçao será executada
+    // Também é possível fazer dessa maneira: authChannel.addEventListener('message', event => {})
+    // A aba que dispara o evento nao recebe a mensagem (já que é ela quem está enviando), somente as outras
+    authChannel.onmessage = (event) => {
+      console.log(event);
+
+      switch (event.data) {
+        case "signOut":
+          // signOut();
+
+          // Não chamar a função signOut(), pois ela envia a mensagem de 'signOut' para o broadcast
+          // o que faz com que a aplicaçao volte para cá e chame signOut() denovo, que vai enviar 'signOut' denovo
+          // fazendo o app voltar pra cá... looping infinito
+          Router.push("/");
+          break;
+        case "signIn":
+          Router.push("/dashboard");
+          break;
+        default:
+          break;
+      }
+    };
+  }, []);
 
   // Sempre que o user fazer um F5, será executado
   // Essa funçao vai buscar os dados do user
@@ -135,6 +167,8 @@ export function AuthProvider(props: AuthProviderProps): JSX.Element {
         api.defaults.headers.common["Authorization"]
       );
 
+      authChannel.postMessage("signIn");
+
       Router.push("/dashboard"); // funciona igual ao push do useRouter
     } catch (error) {
       console.log(error);
@@ -143,8 +177,9 @@ export function AuthProvider(props: AuthProviderProps): JSX.Element {
     console.log("Sign In Finalizado | provider");
   }
 
+  // É possível retornar signOut mesmo que tenha sido criado fora do provider
   return (
-    <AuthContext.Provider value={{ isAuthenticated, signIn, user }}>
+    <AuthContext.Provider value={{ isAuthenticated, signIn, user, signOut }}>
       {props.children}
     </AuthContext.Provider>
   );
@@ -153,6 +188,9 @@ export function AuthProvider(props: AuthProviderProps): JSX.Element {
 export function signOut(): void {
   destroyCookie(undefined, "nextauth.token");
   destroyCookie(undefined, "nextauth.refreshToken");
+
+  // Envia uma mensagem para o broadcast que sera usada para deslogar o app em todas as guias/janelas
+  authChannel.postMessage("signOut");
 
   Router.push("/");
 }

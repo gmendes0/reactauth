@@ -11,14 +11,14 @@ import Head from "next/head";
 import Link from "next/link";
 import { useEffect } from "react";
 import Can from "../components/Can";
-import { signOut, useAuth } from "../contexts/AuthContext";
+import { useAuth } from "../contexts/AuthContext";
 import { useCan } from "../hooks/useCan";
 import { setupApiClient } from "../services/api";
 import { api } from "../services/apiClient";
 import { withSSRAuth } from "../utils/withSSRAuth";
 
 const Dashboard: NextPage = () => {
-  const { user } = useAuth();
+  const { user, signOut } = useAuth();
 
   const userCanSeeMetrics = useCan({
     permissions: ["metrics.list"], // precisa ter todas essas permisoes

@@ -12,10 +12,12 @@ import {
 import { GetServerSideProps, NextPage } from "next";
 import Head from "next/head";
 import Link from "next/link";
-import { signOut } from "../contexts/AuthContext";
+import { useAuth } from "../contexts/AuthContext";
 import { withSSRAuth } from "../utils/withSSRAuth";
 
 const Metrics: NextPage = () => {
+  const { signOut } = useAuth();
+
   return (
     <>
       <Head>
